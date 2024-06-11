@@ -3,6 +3,7 @@ import {format} from 'date-fns'
 import { useState, useEffect } from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
+import {useParams, useNavigate, Link, useLocation} from "react-router-dom";
 import ADPContainer from './ADPContainer.js';
 import CNAContainer from './CNAContainer.js';
 import GithubAPI from './GithubAPI';
@@ -10,13 +11,13 @@ import { Card, Tab, Nav, Alert, Button, InputGroup, Form, ListGroup } from "reac
 
 /*https://raw.githubusercontent.com/cisagov/vulnrichment/develop/2024/30xxx/CVE-2024-30015.json*/
 
+const githubapi = new GithubAPI();
 
 const cve_regex=/CVE-(?<year>\d{4})-(?<id>\d{4,7})/
 
-const githubapi = new GithubAPI("CVE-2020-10672.json");
-
 function App() {
     
+    const { id } = useParams();
     const [recent, setRecent] = useState({});
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -27,11 +28,12 @@ function App() {
     const [doSearch, setDoSearch] = useState(false);
 
 
-
     useEffect(() => {
 
-	searchCVEs();
-	setDoSearch(false);
+	if (doSearch) {
+	    searchCVEs();
+	    setDoSearch(false);
+	}
 
     }, [doSearch]);
     
@@ -40,8 +42,15 @@ function App() {
 
 	let ss = JSON.parse(sessionStorage.getItem("cves")) || {};
         setRecent(ss)
+	
+	if (id) {
+	    setSearchVal(id);
+	    setDoSearch(true);
+	}
+	
 	setError("Search for a CVE!");
 	setLoading(false);
+
     }, [])
 
 
@@ -55,7 +64,6 @@ function App() {
 
 	const found = searchVal.match(cve_regex);
 	if (found) {
-	    console.log(found.groups);
 	    if (Object.keys(found.groups).length === 2) {
 		return found;
 	    }
@@ -67,12 +75,10 @@ function App() {
     const searchCVEs = async () => {
 	setError(null);
 	setLoading(true);
-	console.log(searchVal);
 	//sessionStorage.removeItem("cves");
 	const matches = validateCVE();
 	if (matches) {
 	    let ss = JSON.parse(sessionStorage.getItem("cves")) || {};
-	    console.log(ss)
 	    if (ss?.cves) {
 		if (!ss.cves.includes(searchVal)) {
 		    ss.cves.push(searchVal);
@@ -86,7 +92,6 @@ function App() {
 	    await githubapi.getOne(matches.groups.year, matches.groups.id).then((response) => {
 		setData(response);
 		setLoading(false);
-		console.log(response);
 	    }).catch((err) => {
 		setLoading(false);
 		setError("CVE has not been enriched by CISA");
@@ -106,9 +111,8 @@ function App() {
 	  <h2>Vulnsight</h2>
       </header>
 	<div className="App-body">
-	<div className="d-flex align-items-start gap-2 cve-card">
-
-	    <Card bg="light" className="cve-search-card">
+	    <div className={"cve-card " + (recent.cves?.length > 0 ? "d-flex align-items-start gap-2" : "" )}>
+		<Card bg="light" className={"cve-search-card " + (recent.cves?.length > 0 ? "" : "w-100")}>
 		<Card.Header>
 		    <Form.Group>
 		    <Form.Label>CVE Search</Form.Label>
@@ -158,7 +162,7 @@ function App() {
 			      <h3>{data.cveMetadata.cveId}</h3>
 			      <h4>{data.containers?.cna?.title}</h4>
 
-			      <p className="lead">This record was <a href={`https://cveawg.mitre.org/api/cve/{data.cveMetadata?.cveId}/`} target="_blank" rel="noreferrer" title="CVE JSON record">{data.cveMetadata?.state}</a> by <span className="fw-bold">{data.cveMetadata?.assignerShortName}</span> on {format(new Date(data.cveMetadata?.datePublished), 'yyyy-MM-dd')} and last updated on {format(new Date(data.cveMetadata?.dateUpdated), 'yyyy-MM-dd')}.</p>
+			      <p className="lead">This record was <a href={`https://cveawg.mitre.org/api/cve/${data.cveMetadata?.cveId}/`} target="_blank" rel="noreferrer" title="CVE JSON record">{data.cveMetadata?.state}</a> by <span className="fw-bold">{data.cveMetadata?.assignerShortName}</span> on {format(new Date(data.cveMetadata?.datePublished), 'yyyy-MM-dd')} and last updated on {format(new Date(data.cveMetadata?.dateUpdated), 'yyyy-MM-dd')}.</p>
 			      <hr/>
 			      
 
@@ -228,7 +232,8 @@ function App() {
 		 <ListGroup variant="flush">
 		     {recent.cves.toReversed().map((cve, idx) => (
 			 <ListGroup.Item className="p-2" key={`recent-${idx}`}>
-			     <a href="#" onClick={(e)=>(e.preventDefault(), setSearchVal(cve), setDoSearch(true))}>{cve}</a>
+			     <Link to={`/${cve}`}>{cve}</Link>
+			     {/*<a href="#" onClick={(e)=>(e.preventDefault(), setSearchVal(cve), setDoSearch(true))}>{cve}</a>*/}
 			 </ListGroup.Item>
 		     ))}
 		 </ListGroup>

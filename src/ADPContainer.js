@@ -5,12 +5,8 @@ import CNAContainer from './CNAContainer.js';
 import SSVCDisplay from './SSVCDisplay.js';
 
 
-
-
 const ADPContainer = ({adp}) => {
 
-    console.log(adp);
-    
 
     return (
 	<div className="adp-container">  
