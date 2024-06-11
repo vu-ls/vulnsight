@@ -40,13 +40,18 @@ function App() {
 
     useEffect(() => {
 
-	let ss = JSON.parse(sessionStorage.getItem("cves")) || {};
-        setRecent(ss)
-	
 	if (id) {
 	    setSearchVal(id);
 	    setDoSearch(true);
 	}
+	
+    }, [id]);
+
+    
+    useEffect(() => {
+
+	let ss = JSON.parse(sessionStorage.getItem("cves")) || {};
+        setRecent(ss)
 	
 	setError("Search for a CVE!");
 	setLoading(false);
