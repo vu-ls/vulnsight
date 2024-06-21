@@ -1,15 +1,18 @@
 import React from 'react';
+import { format } from 'date-fns';
 import {Badge} from 'react-bootstrap';
 import CVSSSeverityBadge from './CVSSSeverityBadge.js';
 
-const CNAContainer = ({cna}) => {
+const CNAContainer = ({cna, header}) => {
 
 
 
 
     return (
 	<div className="cna-container">
-
+      {header && (
+      <p className="lead fw-bold">The CNA last updated this entry on {format(new Date(cna.providerMetadata?.dateUpdated), 'yyyy-MM-dd')}.</p>
+      )}
 	    {cna.descriptions?.length > 0 && (
 	    <div className="mb-3"><b>Description:</b><br/>
 		{cna.descriptions.map((d, index) => (

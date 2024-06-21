@@ -210,6 +210,7 @@ function App() {
 
 				     <CNAContainer
 					 cna = {data.containers.cna}
+           header = {true}
 				     />
 				     
 				 </Tab.Pane>
